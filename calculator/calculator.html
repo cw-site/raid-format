@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raid Format Damage Calculator</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: var(--bg-color, #f8f9fa); 
+            color: var(--text-color, #333); 
+            padding: 20px; 
+            max-width: 500px; 
+            margin: auto; 
+            border-radius: 10px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s, color 0.3s;
+        }
+        
+        h2 { 
+            text-align: center; 
+            color: var(--text-color, #333); 
+            margin-top: 0; 
+            margin-bottom: 10px;
+        }
+        
+        label { 
+            font-weight: bold; 
+            margin: 5px 0; 
+            display: block; 
+            color: var(--text-color, #333); 
+        }
+        
+        select, input[type="number"] { 
+            width: 100px; 
+            padding: 8px; 
+            font-size: 16px; 
+            text-align: center;
+            border: 1px solid var(--input-border-color, #ccc); 
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background: var(--input-bg-color, white);
+            color: var(--input-text-color, #333);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .row, .styled-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            background: var(--row-bg-color, #f1f3f5);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .burn-poison-row {
+            display: flex;
+            justify-content: center; /* Center content */
+            gap: 50px; /* Add space between toggles */
+            padding: 10px;
+            border-radius: 5px;
+            background: var(--row-bg-color, #f1f3f5);
+            transition: background 0.3s, color 0.3s;
+            margin-bottom: 15px; /* Add extra spacing before the next row */
+        }
+
+        .result { 
+            text-align: center; 
+            font-size: 20px; 
+            font-weight: bold; 
+            color: var(--text-color, #333); 
+            margin-top: 15px;
+        }
+
+        button { 
+            width: 48%; 
+            padding: 10px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+
+        button:first-of-type { background: #007bff; color: white; }
+        button:last-of-type { background: #dc3545; color: white; }
+        button:hover { opacity: 0.8; }
+
+        .dark-mode-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            position: relative;
+            top: -5px;
+        }
+
+        /* Dark Mode */
+        body.dark-mode {
+            --bg-color: #2d2d2d;
+            --text-color: #f1f1f1;
+            --row-bg-color: #3a3a3a;
+            --input-bg-color: #3a3a3a;
+            --input-text-color: #f1f1f1;
+            --input-border-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="dark-mode-toggle">
+        <label for="darkModeSwitch">☾/☀︎</label>
+        <input type="checkbox" id="darkModeSwitch" onclick="toggleDarkMode()">
+    </div>
+
+    <h2>Raid Format Damage Calculator</h2>
+
+    <div class="row">
+        <div>
+            <label for="numPlayers">Number of Players:</label>
+            <select id="numPlayers" onchange="updatePlayerInputs()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+            </select>
+        </div>
+        <div>
+            <label for="difficulty">Difficulty:</label>
+            <select id="difficulty">
+                <option value="0.5">Easy</option>
+                <option value="1" selected>Medium</option>
+                <option value="2">Hard</option>
+                <option value="3">Extreme</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="playerInputs"></div>
+
+    <div class="burn-poison-row">
+        <label><input type="checkbox" id="burnCheckbox"> Burn 🔥</label>
+        <label><input type="checkbox" id="poisonCheckbox"> Poison ☠️</label>
+    </div>
+
+    <div class="styled-row">
+        <label for="healing">Healing:</label>
+        <input type="number" id="healing" inputmode="numeric" pattern="[0-9]*" placeholder="Healing">
+    </div>
+
+    <h3 class="result">To Lost Zone: <span id="finalResult">-</span> <span id="cardText"></span></h3>
+
+    <div class="row">
+        <button onclick="calculateDamage()">Calculate</button>
+        <button onclick="clearInputs()">Clear All</button>
+    </div>
+
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+
+        function updatePlayerInputs() {
+            let numPlayers = document.getElementById("numPlayers").value;
+            let container = document.getElementById("playerInputs");
+            container.innerHTML = "";
+
+            for (let i = 1; i <= numPlayers; i++) {
+                let div = document.createElement("div");
+                div.classList.add("styled-row");
+                div.innerHTML = `
+                    <label>Player ${i}:</label>
+                    <input type="number" class="damage" inputmode="numeric" pattern="[0-9]*" placeholder="Damage">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function calculateDamage() {
+            let numPlayers = document.getElementById("numPlayers").value;
+            let difficultyMultiplier = parseFloat(document.getElementById("difficulty").value);
+            let damageInputs = document.querySelectorAll(".damage");
+            let burn = document.getElementById("burnCheckbox").checked ? 20 : 0;
+            let poison = document.getElementById("poisonCheckbox").checked ? 10 : 0;
+            let healing = parseInt(document.getElementById("healing").value) || 0;
+
+            let totalDamage = 0;
+            damageInputs.forEach(input => {
+                totalDamage += parseInt(input.value) || 0;
+            });
+
+            totalDamage += burn + poison - healing;
+
+            let denominator = 10 * numPlayers * difficultyMultiplier;
+            let result = Math.max(0, Math.floor(totalDamage / denominator)); // Prevent negatives
+            let cardText = result === 1 ? "card" : "cards";
+
+            document.getElementById("finalResult").innerText = result;
+            document.getElementById("cardText").innerText = cardText;
+        }
+
+        function clearInputs() {
+            document.querySelectorAll(".damage").forEach(input => input.value = "");
+            document.getElementById("burnCheckbox").checked = false;
+            document.getElementById("poisonCheckbox").checked = false;
+            document.getElementById("healing").value = "";
+            document.getElementById("finalResult").innerText = "-";
+            document.getElementById("cardText").innerText = "";
+        }
+
+        updatePlayerInputs();
+    </script>
+</body>
+</html>
